@@ -1,0 +1,42 @@
+name: bank
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  BuildProject:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build banking library
+        run: |
+          cd banking
+          cmake -H. -B_build
+          cmake --build _build
+
+  Testing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup environment
+        run: |
+          git submodule update --init
+          sudo apt install lcov g++-9
+      - name: Run tests
+        run: |
+          mkdir _build && cd _build
+          CXX=/usr/bin/g++-9 cmake -DCOVERAGE=1 ..
+          cmake --build .
+          ./RunTest
+          lcov -t "banking" -o lcov.info -c -d .
+      - name: Upload coverage (initial)
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.github_token }}
+          path-to-lcov: ./_build/lcov.info
+      - name: Upload coverage (final)
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.github_token }}
