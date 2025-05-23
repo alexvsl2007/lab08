@@ -1,54 +1,27 @@
-name: bank
-
+name: Build
 on:
   push:
-    branches: main
-
-  workflow_dispatch:
-      
 jobs:
-
-  BuildProject:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v2
-
-        - name: build banking
-          shell: bash
-          run: |
-            ls
-            cd banking
-            cmake -H. -B_build
-            cmake --build _build
-          
-  Testing:
+  build-project:
+    name: Build Project
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      
-      - name: update
-        run:  |
-          git submodule update --init
-          sudo apt install lcov
-          sudo apt install g++-9
-      
-      - name: test
-        shell: bash
-        run: |
-          mkdir _build && cd _build
-          CXX=/usr/bin/g++-9 cmake -DCOVERAGE=1 ..
-          cmake --build .
-          ./RunTest
-          lcov -t "banking" -o ./coverage/lcov.info -c -d .
-          
-      - name: CovBeg
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.github_token }}
-          path-to-lcov: ./_build/lcov.info
-          coveralls-endpoint: https://coveralls.io
+      - name: Checkout
+        uses: actions/checkout@v4.1.2
 
-      - name: CovFin
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.github_token }}
+      - name: Configure and Build banking
+        run: |
+          cd banking
+          cmake -B build
+          cmake --build build
+      - name: Test and Coveralls
+        env:
+          COVERALLS_REPO_TOKEN: ${{ github.token }}
+        run: |
+          pip install cpp-coveralls
+          cmake -B build
+          cmake --build build
+          cd build
+          ./test_app --enable-gcov
+          cd ..
+          coveralls --root . -E ".*gtest.*" -E ".*CMakeFiles.*" -E ".*third-party.*"
