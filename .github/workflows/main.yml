@@ -1,4 +1,4 @@
-name: CMake
+name: CMake with Coverage
 
 on:
   push:
@@ -21,14 +21,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y g++-9 lcov
 
-    - name: Create Build Environment
-      run: |
-        mkdir -p _build
-        cd _build
-
     - name: Configure CMake
       working-directory: ./_build
       run: |
+        mkdir -p _build
         CXX=/usr/bin/g++-9 cmake -DCOVERAGE=1 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ..
         
     - name: Build
@@ -46,10 +42,9 @@ jobs:
         lcov --rc lcov_branch_coverage=1 --capture --directory . --output-file coverage.info
         lcov --rc lcov_branch_coverage=1 --remove coverage.info '/usr/*' '*/gtest/*' '*/gmock/*' --output-file filtered_coverage.info
         genhtml --rc genhtml_branch_coverage=1 filtered_coverage.info --output-directory coverage_report
-        echo "Coverage report generated in coverage_report/"
 
     - name: Upload coverage report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report
         path: _build/coverage_report
