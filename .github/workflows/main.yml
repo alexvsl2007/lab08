@@ -1,55 +1,55 @@
-name: bank
+name: CMake
 
 on:
   push:
-    branches: master
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
-  workflow_dispatch:
-      
+env:
+  BUILD_TYPE: Release
+
 jobs:
-
-  BuildProject:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v2
-
-        - name: build banking
-          shell: bash
-          run: |
-            ls
-            cd banking
-            cmake -H. -B_build
-            cmake --build _build
-          
-  Testing:
+  build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      
-      - name: update
-        run:  |
-          git submodule update --init
-          sudo apt install lcov
-          sudo apt install g++-9
-      
-      - name: test
-        shell: bash
-        run: |
-          mkdir _build && cd _build
-          CXX=/usr/bin/g++-9 cmake -DCOVERAGE=1 ..
-          cmake --build .
-          ./RunTest
-          lcov -t "banking" -o lcov.info -c -d .
-          
-      - name: CovBeg
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.github_token }}
-          #parallel: true
-          path-to-lcov: ./_build/lcov.info
-          coveralls-endpoint: https://coveralls.io
 
-      - name: CovFin
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.github_token }}
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y g++-9 lcov
+
+    - name: Create Build Environment
+      run: |
+        mkdir -p _build
+        cd _build
+
+    - name: Configure CMake
+      working-directory: ./_build
+      run: |
+        CXX=/usr/bin/g++-9 cmake -DCOVERAGE=1 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ..
+        
+    - name: Build
+      working-directory: ./_build
+      run: cmake --build . --config ${{env.BUILD_TYPE}}
+
+    - name: Run tests
+      working-directory: ./_build
+      run: ./RunTest
+
+    - name: Generate coverage report
+      working-directory: ./_build
+      run: |
+        lcov --version
+        lcov --rc lcov_branch_coverage=1 --capture --directory . --output-file coverage.info
+        lcov --rc lcov_branch_coverage=1 --remove coverage.info '/usr/*' '*/gtest/*' '*/gmock/*' --output-file filtered_coverage.info
+        genhtml --rc genhtml_branch_coverage=1 filtered_coverage.info --output-directory coverage_report
+        echo "Coverage report generated in coverage_report/"
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: _build/coverage_report
