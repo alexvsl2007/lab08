@@ -2,50 +2,51 @@ name: CMake with Coverage
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 env:
   BUILD_TYPE: Release
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  build-and-test:
+    runs-on: ubuntu-24.04  # Явно указываем версию Ubuntu
+    
     steps:
-    - uses: actions/checkout@v3
-
+    - name: Checkout code
+      uses: actions/checkout@v4  # Обновленная версия
+      
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y g++-9 lcov
-
+        
     - name: Create build directory
       run: mkdir -p _build
-
+      
     - name: Configure CMake
       working-directory: _build
       run: |
-        CXX=/usr/bin/g++-9 cmake -DCOVERAGE=1 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ..
+        CXX=/usr/bin/g++-9 cmake -DCOVERAGE=ON -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ..
         
-    - name: Build
+    - name: Build project
       working-directory: _build
       run: cmake --build . --config ${{env.BUILD_TYPE}}
-
+      
     - name: Run tests
       working-directory: _build
       run: ./RunTest
-
-    - name: Generate coverage
+      
+    - name: Generate coverage report
       working-directory: _build
       run: |
         lcov --capture --directory . --output-file coverage.info
-        lcov --remove coverage.info '/usr/*' '*/gtest/*' '*/gmock/*' --output-file filtered_coverage.info
-        genhtml filtered_coverage.info --output-directory coverage_report
-
-    - name: Upload coverage
-      uses: actions/upload-artifact@v3
+        lcov --remove coverage.info '/usr/*' '*/test/*' --output-file filtered.info
+        genhtml filtered.info --output-directory coverage
+        
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4  # Обновленная версия
       with:
         name: coverage-report
-        path: _build/coverage_report
+        path: _build/coverage
