@@ -11,16 +11,18 @@ env:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-24.04  # Явно указываем версию Ubuntu
+    runs-on: ubuntu-24.04
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4  # Обновленная версия
-      
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive  # Ключевое исправление!
+        
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y g++-9 lcov
+        sudo apt-get install -y g++-9 lcov cmake
         
     - name: Create build directory
       run: mkdir -p _build
@@ -46,7 +48,7 @@ jobs:
         genhtml filtered.info --output-directory coverage
         
     - name: Upload coverage report
-      uses: actions/upload-artifact@v4  # Обновленная версия
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report
         path: _build/coverage
