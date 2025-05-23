@@ -4,29 +4,32 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-// Mock-класс для Account
+
+
 class MockAccount : public Account {
 public:
-    MockAccount(int id, int balance) : Account(id, balance) {}
+    MockAccount(int id, int balance):Account(id, balance){};
     MOCK_METHOD(void, Unlock, ());
     MOCK_METHOD(void, Lock, ());
     MOCK_METHOD(int, id, (), (const));
-    MOCK_METHOD(void, ChangeBalance, (int diff));
-    MOCK_METHOD(int, GetBalance, ());
+    MOCK_METHOD(void, ChangeBalance, (int diff), ());
+    MOCK_METHOD(int, GetBalance, (), ());
 };
 
-// Mock-класс для Transaction
-class MockTransaction : public Transaction {
+class MockTransaction: public Transaction {
 public:
-    MOCK_METHOD(bool, Make, (Account& from, Account& to, int sum));
-    MOCK_METHOD(void, set_fee, (int fee));
-    MOCK_METHOD(int, fee, ());
+    MOCK_METHOD(bool, Make, (Account& from, Account& to, int sum), ());
+    MOCK_METHOD(void, set_fee, (int fee), ());
+    MOCK_METHOD(int, fee, (), ());
 };
 
-// Тесты для Account
 TEST(Account, Balance_ID_Change) {
     MockAccount acc(1, 100);
-    // Проверки вызовов методов
+    EXPECT_CALL(acc, GetBalance()).Times(3);
+    EXPECT_CALL(acc, Lock()).Times(1);
+    EXPECT_CALL(acc, Unlock()).Times(1);
+    EXPECT_CALL(acc, ChangeBalance(testing::_)).Times(2);
+    EXPECT_CALL(acc, id()).Times(1);
     acc.GetBalance();
     acc.id();
     acc.Unlock();
@@ -35,6 +38,7 @@ TEST(Account, Balance_ID_Change) {
     acc.ChangeBalance(2);
     acc.GetBalance();
     acc.Lock();
+    //EXPECT_EQ(acc.GetBalance(), 100);
 }
 
 TEST(Account, Balance_ID_Change_2) {
@@ -47,12 +51,17 @@ TEST(Account, Balance_ID_Change_2) {
     acc.Unlock();
 }
 
-// Тесты для Transaction
 TEST(Transaction, TransTest) {
     MockTransaction trans;
-    MockAccount first(1, 100), second(2, 250);
-    MockAccount flat_org(3, 10000), org(4, 5000);
-    
+    MockAccount first(1, 100);
+    MockAccount second(2, 250);
+    MockAccount flat_org(3, 10000);
+    MockAccount org(4, 5000);
+    EXPECT_CALL(trans, set_fee(testing::_)).Times(1);
+    EXPECT_CALL(trans, fee()).Times(1);
+    EXPECT_CALL(trans, Make(testing::_, testing::_, testing::_)).Times(2);
+    EXPECT_CALL(first, GetBalance()).Times(1);
+    EXPECT_CALL(second, GetBalance()).Times(1);
     trans.set_fee(300);
     trans.Make(first, second, 2000);
     trans.fee();
@@ -60,3 +69,5 @@ TEST(Transaction, TransTest) {
     second.GetBalance();
     trans.Make(org, first, 1000);
 }
+
+
