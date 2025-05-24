@@ -1,0 +1,12 @@
+Architecture: amd64
+Depends: libc6 (>= 2.28), libstdc++6 (>= 10.2.0)
+Description: Banking application test framework
+ A simple C++ library for printing messages
+Maintainer: alexvsl2007 <alexvsl2007@gmail.com>
+Package: libtestrunning-dev
+Pre-Depends: cmake >= 3.10
+Priority: optional
+Section: devel
+Version: 0.1.0-1
+Installed-Size: 6019
+
