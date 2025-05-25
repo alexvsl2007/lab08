@@ -1,136 +1,147 @@
-## Laboratory work V
-
-Данная лабораторная работа посвещена изучению фреймворков для тестирования на примере **GTest**
-
-```sh
-$ open https://github.com/google/googletest
+## Laboratory work VI
+Данная лабораторная работа посвещена изучению средств пакетирования на примере CPack
 ```
-
+$ open https://cmake.org/Wiki/CMake:CPackPackageGenerators
+```
 ## Tasks
-
-- [ ] 1. Создать публичный репозиторий с названием **lab05** на сервисе **GitHub**
-- [ ] 2. Выполнить инструкцию учебного материала
-- [ ] 3. Ознакомиться со ссылками учебного материала
-- [ ] 4. Составить отчет и отправить ссылку личным сообщением в **Slack**
-
+ 1. Создать публичный репозиторий с названием lab06 на сервисе GitHub
+ 2. Выполнить инструкцию учебного материала
+ 3. Ознакомиться со ссылками учебного материала
+ 4. Составить отчет и отправить ссылку личным сообщением в Slack
 ## Tutorial
-
-```sh
-$ export GITHUB_USERNAME=<имя_пользователя>
-$ alias gsed=sed # for *-nix system
 ```
-
-```sh
+$ export GITHUB_USERNAME=<имя_пользователя>
+$ export GITHUB_EMAIL=<адрес_почтового_ящика>
+$ alias edit=<nano|vi|vim|subl>
+```
+```
+$ alias gsed=sed # for *-nix system
 $ cd ${GITHUB_USERNAME}/workspace
 $ pushd .
 $ source scripts/activate
 ```
-
-```sh
-$ git clone https://github.com/${GITHUB_USERNAME}/lab04 projects/lab05
-$ cd projects/lab05
+```
+$ git clone https://github.com/${GITHUB_USERNAME}/lab05 projects/lab06
+$ cd projects/lab06
 $ git remote remove origin
-$ git remote add origin https://github.com/${GITHUB_USERNAME}/lab05
+$ git remote add origin https://github.com/${GITHUB_USERNAME}/lab06
 ```
-
-```sh
-$ mkdir third-party
-$ git submodule add https://github.com/google/googletest third-party/gtest
-$ cd third-party/gtest && git checkout release-1.8.1 && cd ../..
-$ git add third-party/gtest
-$ git commit -m"added gtest framework"
 ```
-
-```sh
-$ gsed -i '/option(BUILD_EXAMPLES "Build examples" OFF)/a\
-option(BUILD_TESTS "Build tests" OFF)
+$ gsed -i '/project(print)/a\
+set(PRINT_VERSION_STRING "v\${PRINT_VERSION}")
 ' CMakeLists.txt
+$ gsed -i '/project(print)/a\
+set(PRINT_VERSION\
+  \${PRINT_VERSION_MAJOR}.\${PRINT_VERSION_MINOR}.\${PRINT_VERSION_PATCH}.\${PRINT_VERSION_TWEAK})
+' CMakeLists.txt
+$ gsed -i '/project(print)/a\
+set(PRINT_VERSION_TWEAK 0)
+' CMakeLists.txt
+$ gsed -i '/project(print)/a\
+set(PRINT_VERSION_PATCH 0)
+' CMakeLists.txt
+$ gsed -i '/project(print)/a\
+set(PRINT_VERSION_MINOR 1)
+' CMakeLists.txt
+$ gsed -i '/project(print)/a\
+set(PRINT_VERSION_MAJOR 0)
+' CMakeLists.txt
+$ git diff
+```
+```
+$ touch DESCRIPTION && edit DESCRIPTION
+$ touch ChangeLog.md
+$ export DATE="`LANG=en_US date +'%a %b %d %Y'`"
+$ cat > ChangeLog.md <<EOF
+* ${DATE} ${GITHUB_USERNAME} <${GITHUB_EMAIL}> 0.1.0.0
+- Initial RPM release
+EOF
+```
+```
+$ cat > CPackConfig.cmake <<EOF
+include(InstallRequiredSystemLibraries)
+EOF
+```
+```
+$ cat >> CPackConfig.cmake <<EOF
+set(CPACK_PACKAGE_CONTACT ${GITHUB_EMAIL})
+set(CPACK_PACKAGE_VERSION_MAJOR \${PRINT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR \${PRINT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH \${PRINT_VERSION_PATCH})
+set(CPACK_PACKAGE_VERSION_TWEAK \${PRINT_VERSION_TWEAK})
+set(CPACK_PACKAGE_VERSION \${PRINT_VERSION})
+set(CPACK_PACKAGE_DESCRIPTION_FILE \${CMAKE_CURRENT_SOURCE_DIR}/DESCRIPTION)
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "static C++ library for printing")
+EOF
+```
+```
+$ cat >> CPackConfig.cmake <<EOF
+
+set(CPACK_RESOURCE_FILE_LICENSE \${CMAKE_CURRENT_SOURCE_DIR}/LICENSE)
+set(CPACK_RESOURCE_FILE_README \${CMAKE_CURRENT_SOURCE_DIR}/README.md)
+EOF
+```
+```
+$ cat >> CPackConfig.cmake <<EOF
+
+set(CPACK_RPM_PACKAGE_NAME "print-devel")
+set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+set(CPACK_RPM_PACKAGE_GROUP "print")
+set(CPACK_RPM_CHANGELOG_FILE \${CMAKE_CURRENT_SOURCE_DIR}/ChangeLog.md)
+set(CPACK_RPM_PACKAGE_RELEASE 1)
+EOF
+```
+```
+$ cat >> CPackConfig.cmake <<EOF
+
+set(CPACK_DEBIAN_PACKAGE_NAME "libprint-dev")
+set(CPACK_DEBIAN_PACKAGE_PREDEPENDS "cmake >= 3.0")
+set(CPACK_DEBIAN_PACKAGE_RELEASE 1)
+EOF
+```
+```
+$ cat >> CPackConfig.cmake <<EOF
+
+include(CPack)
+EOF
+```
+```
 $ cat >> CMakeLists.txt <<EOF
 
-if(BUILD_TESTS)
-  enable_testing()
-  add_subdirectory(third-party/gtest)
-  file(GLOB \${PROJECT_NAME}_TEST_SOURCES tests/*.cpp)
-  add_executable(check \${\${PROJECT_NAME}_TEST_SOURCES})
-  target_link_libraries(check \${PROJECT_NAME} gtest_main)
-  add_test(NAME check COMMAND check)
-endif()
+include(CPackConfig.cmake)
 EOF
 ```
-
-```sh
-$ mkdir tests
-$ cat > tests/test1.cpp <<EOF
-#include <print.hpp>
-
-#include <gtest/gtest.h>
-
-TEST(Print, InFileStream)
-{
-  std::string filepath = "file.txt";
-  std::string text = "hello";
-  std::ofstream out{filepath};
-
-  print(text, out);
-  out.close();
-
-  std::string result;
-  std::ifstream in{filepath};
-  in >> result;
-
-  EXPECT_EQ(result, text);
-}
-EOF
 ```
-
-```sh
-$ cmake -H. -B_build -DBUILD_TESTS=ON
-$ cmake --build _build
-$ cmake --build _build --target test
+$ gsed -i 's/lab05/lab06/g' README.md
+$ git add .
+$ git commit -m"added cpack config"
+$ git tag v0.1.0.0
+$ git push origin master --tags
 ```
-
-```sh
-$ _build/check
-$ cmake --build _build --target test -- ARGS=--verbose
 ```
-
-```sh
-$ gsed -i 's/lab04/lab05/g' README.md
-$ gsed -i 's/\(DCMAKE_INSTALL_PREFIX=_install\)/\1 -DBUILD_TESTS=ON/' .travis.yml
-$ gsed -i '/cmake --build _build --target install/a\
-- cmake --build _build --target test -- ARGS=--verbose
-' .travis.yml
-```
-
-```sh
-$ travis lint
-```
-
-```sh
-$ git add .travis.yml
-$ git add tests
-$ git add -p
-$ git commit -m"added tests"
-$ git push origin master
-```
-
-```sh
 $ travis login --auto
 $ travis enable
 ```
-
-```sh
-$ mkdir artifacts
-$ sleep 20s && gnome-screenshot --file artifacts/screenshot.png
-# for macOS: $ screencapture -T 20 artifacts/screenshot.png
-# open https://github.com/${GITHUB_USERNAME}/lab05
 ```
-
+$ cmake -H. -B_build
+$ cmake --build _build
+$ cd _build
+$ cpack -G "TGZ"
+$ cd ..
+```
+```
+$ cmake -H. -B_build -DCPACK_GENERATOR="TGZ"
+$ cmake --build _build --target package
+```
+```
+$ mkdir artifacts
+$ mv _build/*.tar.gz artifacts
+$ tree artifacts
+```
 ## Report
-
-```sh
+```
 $ popd
-$ export LAB_NUMBER=05
+$ export LAB_NUMBER=06
 $ git clone https://github.com/tp-labs/lab${LAB_NUMBER} tasks/lab${LAB_NUMBER}
 $ mkdir reports/lab${LAB_NUMBER}
 $ cp tasks/lab${LAB_NUMBER}/README.md reports/lab${LAB_NUMBER}/REPORT.md
@@ -138,221 +149,53 @@ $ cd reports/lab${LAB_NUMBER}
 $ edit REPORT.md
 $ gist REPORT.md
 ```
-
 ## Homework
+После того, как вы настроили взаимодействие с системой непрерывной интеграции,
+обеспечив автоматическую сборку и тестирование ваших изменений, стоит задуматься
+о создание пакетов для измениний, которые помечаются тэгами (см. вкладку releases).
+Пакет должен содержать приложение solver из предыдущего задания Таким образом, каждый новый релиз будет состоять из следующих компонентов:
 
-### Задание
-1. Создайте `CMakeList.txt` для библиотеки *banking*.
-```sh
-(mordecai㉿kali)-[~/workspace/projects]
-└─$ git clone https://github.com/tp-labs/lab05.git lab05             
-Клонирование в «lab05»...
-remote: Enumerating objects: 137, done.
-remote: Counting objects: 100% (25/25), done.
-remote: Compressing objects: 100% (9/9), done.
-remote: Total 137 (delta 18), reused 16 (delta 16), pack-reused 112 (from 1)
-Получение объектов: 100% (137/137), 918.92 КиБ | 518.00 КиБ/с, готово.
-Определение изменений: 100% (60/60), готово.
-                                                                                                                                          
-┌──(mordecai㉿kali)-[~/workspace/projects]
-└─$ cd lab05/banking
-                                                                                                                                          
-┌──(mordecai㉿kali)-[~/workspace/projects/lab05/banking]
-└─$ touch CMakeLists.txt
-CMakeLists.txt:
-'''
-cmake_minimum_required(VERSION 3.16.3)
-set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
-
-project(banking)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-add_library(banking STATIC 
-    Account.cpp Account.h 
-    Transaction.cpp Transaction.h
-)
-'''                                                                                                                                       
-┌──(mordecai㉿kali)-[~/workspace/projects/lab05/banking]
-└─$ ls                                       
-Account.cpp  Account.h  CMakeLists.txt  CMakeList.txt  Transaction.cpp  Transaction.h
-                                                                                                                                          
-┌──(mordecai㉿kali)-[~/workspace/projects/lab05/banking]
-└─$ rm CMakeList.txt
-
-(mordecai㉿kali)-[~/workspace/projects/lab05/banking]
-└─$ cd ..                       
-                                                                                                                                 
-┌──(mordecai㉿kali)-[~/workspace/projects/lab05]
-└─$ touch CMakeLists.txt
-
-CMakeLists.txt:
-'''
-cmake_minimum_required(VERSION 3.4)
-
-set(COVERAGE OFF CACHE BOOL "Coverage")
-set(CMAKE_CXX_COMPILER "/usr/bin/g++")
-
-project(TestRunning)
-
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/googletest" "gtest")
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/banking)
-
-add_executable(RunTest ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp)
-
-if(COVERAGE)
-    target_compile_options(RunTest PRIVATE --coverage)
-    target_link_libraries(RunTest PRIVATE --coverage)
-endif()
-
-target_include_directories(RunTest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/banking)
-target_link_libraries(RunTest PRIVATE gtest gtest_main gmock_main banking)
-'''
-
+архивы с файлами исходного кода (.tar.gz, .zip)
+пакеты с бинарным файлом solver (.deb, .rpm, .msi, .dmg)
+В качестве подсказки:
 ```
-2. Создайте модульные тесты на классы `Transaction` и `Account`.
-    * Используйте mock-объекты.
-    * Покрытие кода должно составлять 100%.
-```sh
-(mordecai㉿kali)-[~/workspace/projects/lab05]
-└─$ git submodule add https://github.com/google/googletest.git
-Клонирование в «/home/mordecai/workspace/projects/lab05/googletest»...
-remote: Enumerating objects: 28085, done.
-remote: Counting objects: 100% (303/303), done.
-remote: Compressing objects: 100% (194/194), done.
-remote: Total 28085 (delta 194), reused 114 (delta 106), pack-reused 27782 (from 4)
-Получение объектов: 100% (28085/28085), 13.57 МиБ | 1.75 МиБ/с, готово.
-Определение изменений: 100% (20802/20802), готово.
-                                                                                                                                 
-┌──(mordecai㉿kali)-[~/workspace/projects/lab05]
-└─$ touch test.cpp
-test.cpp:
-'''
-#include <iostream>
-#include <Account.h>
-#include <Transaction.h>
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
+$ cat .travis.yml
+os: osx
+script:
+...
+- cpack -G DragNDrop # dmg
 
-// Mock-класс для Account
-class MockAccount : public Account {
-public:
-    MockAccount(int id, int balance) : Account(id, balance) {}
-    MOCK_METHOD(void, Unlock, ());
-    MOCK_METHOD(void, Lock, ());
-    MOCK_METHOD(int, id, (), (const));
-    MOCK_METHOD(void, ChangeBalance, (int diff));
-    MOCK_METHOD(int, GetBalance, ());
-};
+$ cat .travis.yml
+os: linux
+script:
+...
+- cpack -G DEB # deb
 
-// Mock-класс для Transaction
-class MockTransaction : public Transaction {
-public:
-    MOCK_METHOD(bool, Make, (Account& from, Account& to, int sum));
-    MOCK_METHOD(void, set_fee, (int fee));
-    MOCK_METHOD(int, fee, ());
-};
+$ cat .travis.yml
+os: linux
+addons:
+  apt:
+    packages:
+    - rpm
+script:
+...
+- cpack -G RPM # rpm
 
-// Тесты для Account
-TEST(Account, Balance_ID_Change) {
-    MockAccount acc(1, 100);
-    // Проверки вызовов методов
-    acc.GetBalance();
-    acc.id();
-    acc.Unlock();
-    acc.ChangeBalance(1000);
-    acc.GetBalance();
-    acc.ChangeBalance(2);
-    acc.GetBalance();
-    acc.Lock();
-}
-
-TEST(Account, Balance_ID_Change_2) {
-    Account acc(0, 100);
-    EXPECT_THROW(acc.ChangeBalance(50), std::runtime_error);
-    acc.Lock();
-    acc.ChangeBalance(50);
-    EXPECT_EQ(acc.GetBalance(), 150);
-    EXPECT_THROW(acc.Lock(), std::runtime_error);
-    acc.Unlock();
-}
-
-// Тесты для Transaction
-TEST(Transaction, TransTest) {
-    MockTransaction trans;
-    MockAccount first(1, 100), second(2, 250);
-    MockAccount flat_org(3, 10000), org(4, 5000);
-    
-    trans.set_fee(300);
-    trans.Make(first, second, 2000);
-    trans.fee();
-    first.GetBalance();
-    second.GetBalance();
-    trans.Make(org, first, 1000);
-}
-'''
+$ cat appveyor.yml
+platform:
+- x86
+- x64
+build_script:
+...
+- cpack -G WIX # msi
 ```
-3. Настройте сборочную процедуру на **TravisCI**.
-```sh
-─(mordecai㉿kali)-[~/workspace/projects/lab05]
-└─$ mkdir -p .github/workflows
-                                                                                                                                 
-┌──(mordecai㉿kali)-[~/workspace/projects/lab05]
-└─$ touch .github/workflows/main.yml
-main.yml:
-'''
-name: bank
+Для этого нужно добавить ветвление в конфигурационные файлы для CI со следующей логикой:
+если commit помечен тэгом, то необходимо собрать пакеты (DEB, RPM, WIX, DragNDrop, ...)
+и разместить их на сервисе GitHub. (см. пример для Travi CI)
 
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-jobs:
-  BuildProject:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build banking library
-        run: |
-          cd banking
-          cmake -H. -B_build
-          cmake --build _build
-
-  Testing:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup environment
-        run: |
-          git submodule update --init
-          sudo apt install lcov g++-9
-      - name: Run tests
-        run: |
-          mkdir _build && cd _build
-          CXX=/usr/bin/g++-9 cmake -DCOVERAGE=1 ..
-          cmake --build .
-          ./RunTest
-          lcov -t "banking" -o lcov.info -c -d .
-      - name: Upload coverage (initial)
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.github_token }}
-          path-to-lcov: ./_build/lcov.info
-      - name: Upload coverage (final)
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.github_token }}
-'''
-```
-4. Настройте [Coveralls.io](https://coveralls.io/).
-
-## Links
-
-- [C++ CI: Travis, CMake, GTest, Coveralls & Appveyor](http://david-grs.github.io/cpp-clang-travis-cmake-gtest-coveralls-appveyor/)
-- [Boost.Tests](http://www.boost.org/doc/libs/1_63_0/libs/test/doc/html/)
-- [Catch](https://github.com/catchorg/Catch2)
-
-```
+Links
+DMG
+DEB
+RPM
+NSIS
 Copyright (c) 2015-2021 The ISC Authors
-```
