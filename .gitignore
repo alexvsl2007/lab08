@@ -1,4 +1,4 @@
-# Build directories
+
 _build/
 _build-*/
 build/
@@ -13,14 +13,14 @@ out/
 *.so
 *.dylib
 
-# Binaries and install directories
+
 bin/
 lib/
 _install/
 *.exe
 *.dll
 
-# Package files
+
 *.tar.gz
 *.deb
 *.rpm
@@ -28,22 +28,22 @@ _install/
 *.dmg
 *.msi
 
-# IDE and editor files
+
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Logs
+
 logs/
 *.log
 
-# CMake cache
+
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 install_manifest.txt
 compile_commands.json
 
-# macOS
+
 .DS_Store
