@@ -3,7 +3,10 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
       with:
@@ -11,8 +14,14 @@ jobs:
     
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake dpkg-dev rpm
+        if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake dpkg-dev rpm
+        elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+        elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+          brew install cmake
+        fi
         
     - name: Configure and Build
       run: |
@@ -22,6 +31,12 @@ jobs:
     - name: Create Packages
       run: |
         cd build
-        cpack -G TGZ
-        cpack -G DEB
-        cpack -G RPM
+        if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+          cpack -G TGZ
+          cpack -G DEB
+          cpack -G RPM
+        elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          cpack -G WIX
+        elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+          cpack -G DragNDrop
+        fi
