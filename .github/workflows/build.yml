@@ -21,8 +21,8 @@ jobs:
     - name: Install dependencies (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-         choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-         choco install wixtoolset
+        choco install wixtoolset -y
+        echo "WIX=C:\Program Files (x86)\WiX Toolset v3.11\bin" >> $GITHUB_ENV
       
     - name: Install dependencies (macOS)
       if: matrix.os == 'macos-latest'
@@ -45,7 +45,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         cd build
-        cpack -G WIX -C Release
+        cpack -G WIX -C Release -V --debug
         
     - name: Create Packages (macOS)
       if: matrix.os == 'macos-latest'
