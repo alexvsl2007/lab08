@@ -49,7 +49,7 @@ if(BUILD_TESTS)
     target_link_libraries(RunTest PRIVATE 
         gtest 
         gtest_main 
-        gmock_main 
+        gmock
         banking
     )
 endif()
@@ -80,6 +80,7 @@ set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/DESCRIPTION")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Banking application test framework")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_RPM_PACKAGE_NAME "testrunning-devel")
 set(CPACK_RPM_PACKAGE_GROUP "Development/Tools")
 set(CPACK_RPM_CHANGELOG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ChangeLog.md")
@@ -103,4 +104,5 @@ else()
     set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
 endif()
 
+include(InstallRequiredSystemLibraries)
 include(CPack)
