@@ -59,3 +59,15 @@ jobs:
       run: |
         cd build
         cpack -G DragNDrop
+        
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Packages
+        path: |
+          build/*.msi
+          build/*.deb
+          build/*.rpm
+          build/*.dmg
+          build/*.tar.gz
+        if-no-files-found: error
