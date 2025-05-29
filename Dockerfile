@@ -6,18 +6,21 @@ RUN apt-get update && apt-get install -y \
     make \
     g++ \
     git \
-    libgtest-dev \
     && rm -rf /var/lib/apt/lists/*
 
+WORKDIR /usr/src
+
+RUN git clone --recursive https://github.com/ваш-репозиторий.git app
+
 WORKDIR /usr/src/app
-COPY . .
-
-RUN apt-get install -y libgtest-dev && \
-    cd /usr/src/googletest && \
-    cmake . && make && make install
-
 RUN mkdir build && cd build && \
     cmake .. && \
     cmake --build . --config Release --parallel $(nproc) && \
     ctest --output-on-failure && \
     cpack -G TGZ
+
+FROM alpine:latest
+COPY --from=builder /usr/src/app/build/*.tar.gz /output/
+COPY --from=builder /usr/src/app/build/Testing/Temporary/LastTest.log /output/test_results.log
+WORKDIR /output
+CMD ["sh", "-c", "ls -lh && cat test_results.log"]
