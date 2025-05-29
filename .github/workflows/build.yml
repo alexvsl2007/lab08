@@ -60,14 +60,26 @@ jobs:
         cd build
         cpack -G DragNDrop
         
-    - name: Upload artifacts
+    - name: Upload Windows artifacts
+      if: matrix.os == 'windows-latest'
       uses: actions/upload-artifact@v4
       with:
-        name: Packages
+        name: Windows-Packages
+        path: build/*.msi
+
+    - name: Upload Linux artifacts
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: Linux-Packages
         path: |
-          build/*.msi
           build/*.deb
           build/*.rpm
-          build/*.dmg
           build/*.tar.gz
-        if-no-files-found: error
+
+    - name: Upload macOS artifacts
+      if: matrix.os == 'macos-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: macOS-Packages
+        path: build/*.dmg
