@@ -8,8 +8,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Install docker
+      run: |
+        sudo apt-get remove containerd.io
+        sudo apt install docker.io docker-compose -y
     - name: Build Docker image
-      run: docker build -t lab08-app .
+      run: docker build -t builder .
       
     - name: Run container and extract artifacts
       run: |
