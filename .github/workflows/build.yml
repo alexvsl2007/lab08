@@ -23,6 +23,13 @@ jobs:
       run: |
         choco install wixtoolset -y
         echo "WIX=C:\Program Files (x86)\WiX Toolset v3.11\bin" >> $GITHUB_ENV
+    - name: Prepare license
+      if: matrix.os == 'windows-latest'
+      shell: pwsh
+      run: |
+        if (!(Test-Path "LICENSE.rtf")) {
+            " " | Out-File -Encoding ASCII "LICENSE.rtf"
+        }
       
     - name: Install dependencies (macOS)
       if: matrix.os == 'macos-latest'
@@ -31,7 +38,7 @@ jobs:
     - name: Configure and Build
       run: |
         cmake -B build -DCMAKE_BUILD_TYPE=Release
-        cmake --build build
+        cmake --build build --config Release
         
     - name: Create Packages (Linux)
       if: matrix.os == 'ubuntu-latest'
