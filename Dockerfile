@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /usr/src
 
-RUN git clone --recursive https://github.com/ваш-репозиторий.git app
+RUN git clone --recursive https://github.com/lab08.git app
 
 WORKDIR /usr/src/app
 RUN mkdir build && cd build && \
